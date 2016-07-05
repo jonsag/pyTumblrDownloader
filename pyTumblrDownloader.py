@@ -2,14 +2,17 @@
 # -*- coding: utf-8 -*-
 # Encoding: UTF-8
 
-import sys, getopt, os
+import sys, getopt
 
-from modules import onError, usage
+from modules import onError, usage, checkDirectories, defaultDownloadDir, subDir, gifDir, videoDir
+
+from tumblr import authenticateClient, getPosts
 
 try:
     myopts, args = getopt.getopt(sys.argv[1:],
+                                 'b:'
                                  'vh',
-                                 ['verbose', 'help'])
+                                 ['blog:', 'verbose', 'help'])
 
 except getopt.GetoptError as e:
     onError(1, str(e))
@@ -20,8 +23,18 @@ if len(sys.argv) == 1:  # no options passed
 verbose = False
     
 for option, argument in myopts:
+    if option in ('-b', '--blog'):
+        blog = argument
     if option in ('-v', '--verbose'):  # verbose output
         verbose = True
     elif option in ('-h', '--help'):  # display help text
         usage(0)
-        
+
+downloadDir, gifDir, videoDir = checkDirectories(defaultDownloadDir, subDir, blog, gifDir, videoDir, verbose)
+
+client = authenticateClient(verbose)
+
+posts = getPosts(client, blog, downloadDir, gifDir, videoDir, verbose)
+
+
+
