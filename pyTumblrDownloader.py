@@ -10,9 +10,10 @@ from tumblr import authenticateClient, getPosts
 
 try:
     myopts, args = getopt.getopt(sys.argv[1:],
-                                 'b:'
+                                 'b:' 
+                                 'k'
                                  'vh',
-                                 ['blog:', 'verbose', 'help'])
+                                 ['blog:', 'keepgoing', 'verbose', 'help'])
 
 except getopt.GetoptError as e:
     onError(1, str(e))
@@ -21,11 +22,14 @@ if len(sys.argv) == 1:  # no options passed
     onError(2, 2)
     
 verbose = False
+keepGoing = False
     
 for option, argument in myopts:
     if option in ('-b', '--blog'):
         blog = argument
-    if option in ('-v', '--verbose'):  # verbose output
+    elif option in ('-k', '--keepgoing'):
+        keepGoing = True
+    elif option in ('-v', '--verbose'):  # verbose output
         verbose = True
     elif option in ('-h', '--help'):  # display help text
         usage(0)
@@ -34,7 +38,7 @@ downloadDir, gifDir, videoDir = checkDirectories(defaultDownloadDir, subDir, blo
 
 client = authenticateClient(verbose)
 
-posts = getPosts(client, blog, downloadDir, gifDir, videoDir, verbose)
+posts = getPosts(client, blog, downloadDir, gifDir, videoDir, keepGoing, verbose)
 
 
 

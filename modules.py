@@ -19,9 +19,10 @@ defaultDownloadDir = config.get('directory_settings', 'defaultDownloadDir').lstr
 subDir = config.get('directory_settings', 'subDir').lstrip(" ").rstrip(" ")
 gifDir = config.get('directory_settings', 'gifDir').lstrip(" ").rstrip(" ")
 videoDir = config.get('directory_settings', 'videoDir').lstrip(" ").rstrip(" ")
+tempFileExtension = config.get('directory_settings', 'tempFileExtension')
 
-animatedTypes = config.get('file_types', 'animatedTypes').strip(" ").split(",")
-videoTypes = config.get('file_types', 'videoTypes').strip(" ").split(",")
+animatedTypes = config.get('file_types', 'animatedTypes').replace(" ", "").split(",")
+videoTypes = config.get('file_types', 'videoTypes').replace(" ", "").split(",")
 
 def onError(errorCode, extra):
     print "\nError %s" % errorCode
@@ -31,7 +32,7 @@ def onError(errorCode, extra):
     elif errorCode == 2:
         print "No options given"
         usage(errorCode)
-    elif errorCode == 4:
+    elif errorCode in (4, 5):
         print extra
         sys.exit(errorCode)
     elif errorCode == 3:
@@ -41,7 +42,10 @@ def onError(errorCode, extra):
 def usage(exitCode):
     print "\nUsage:"
     print "----------------------------------------"
-    print "%s " % sys.argv[0]
+    print "%s -b <blog_name> " % sys.argv[0]
+    print "\nMisc options:"
+    print "-v    verbose output"
+    print "-h    prints this"
 
     sys.exit(exitCode)
     
@@ -99,6 +103,29 @@ def checkDirectory(path, verbose):
     else:
         onError(4, "%s is NOT writeable" % path)
         
+    if verbose:
+        print "Deleting .%s files..."
+    oldTempFiles = [ f for f in os.listdir(path) if f.endswith(".%s" % tempFileExtension) ]
+    for f in oldTempFiles:
+        os.remove(f)
+        
+def checkFileExists(url, path, verbose):
+    fileExists = False
+    
+    fileName = url.split('/')[-1]
+    
+    if verbose:
+        print "Checking if %s exists at \n %s ..." % (fileName, path)
+        
+    path = os.path.join(path, fileName)
+    
+    if os.path.isfile(path):
+        fileExists = True
+        if verbose:
+            print "File already downloaded"
+        
+    return fileExists
+        
 def downloadFile(url, path, verbose):
     
     fileName = url.split('/')[-1]
@@ -114,7 +141,7 @@ def downloadFile(url, path, verbose):
         f = urlopen(url)
 
         # Open our local file for writing
-        with open(path, "wb") as local_file:
+        with open("%s.%s" % (path, tempFileExtension), "wb") as local_file:
             local_file.write(f.read())
 
     #handle errors
@@ -123,5 +150,6 @@ def downloadFile(url, path, verbose):
     except URLError, e:
         print "URL Error:", e.reason, url
         
-    
+    else:
+        os.rename("%s.%s" % (path, tempFileExtension), path)
         
