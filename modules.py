@@ -107,7 +107,7 @@ def checkDirectory(path, verbose):
         print "Deleting .%s files..."
     oldTempFiles = [ f for f in os.listdir(path) if f.endswith(".%s" % tempFileExtension) ]
     for f in oldTempFiles:
-        os.remove(f)
+        os.remove(os.path.join(path, f))
         
 def checkFileExists(url, path, verbose):
     fileExists = False
